@@ -10,8 +10,8 @@ module Control.Monad.Readers
 
 import Control.Monad.Reader hiding (MonadReader(ask, local, reader), asks)
 import qualified Control.Monad.Reader as MTL (ask, local)
-import Control.Monad.State (StateT, get, evalStateT, mapStateT)
-import Control.Monad.Writer (runWriterT, WriterT, mapWriterT)
+import Control.Monad.State (StateT, mapStateT)
+import Control.Monad.Writer (WriterT, mapWriterT)
 
 -- | Version of MonadReader modified to remove the functional dependency.
 class Monad m => MonadReaders r m where
