@@ -1,6 +1,7 @@
 -- | MonadState without the function dependency @m -> s@.
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Control.Monad.Readers
     ( module Control.Monad.Reader
     , MonadReaders(ask, local)
@@ -9,8 +10,8 @@ module Control.Monad.Readers
 
 import Control.Monad.Reader hiding (MonadReader(ask, local, reader), asks)
 import qualified Control.Monad.Reader as MTL (ask, local)
-import Control.Monad.State (StateT, get, evalStateT)
-import Control.Monad.Writer (runWriterT, WriterT)
+import Control.Monad.State (StateT, get, evalStateT, mapStateT)
+import Control.Monad.Writer (runWriterT, WriterT, mapWriterT)
 
 -- | Version of MonadReader modified to remove the functional dependency.
 class Monad m => MonadReaders r m where
@@ -30,11 +31,11 @@ instance Monad m => MonadReaders r (ReaderT r m) where
 
 instance (Monad m, MonadReaders r m) => MonadReaders r (StateT s m) where
     ask = lift ask
-    local f action = get >>= lift . local f . evalStateT action
+    local = mapStateT . local
 
 instance (Monad m, Monoid w, MonadReaders r m) => MonadReaders r (WriterT w m) where
     ask = lift ask
-    local f action = lift (local f (runWriterT action >>= return . fst))
+    local = mapWriterT . local
 
 {-
 -- Here is how you create a MonadReaders instance for a type that is

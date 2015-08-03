@@ -20,23 +20,20 @@ If so, you almost certainly saw something like this:
         arising from the type signature for
                        myFunction :: (MonadState Foo m, MonadState Bar m) => m r
 
-What happens if we remove that functional dependency?  The
-mtl-unleashed package provides copies of MonadState and MonadReader
-with that functional dependency removed, named MonadStates and
-MonadReaders.  This allows more flexibility to extract bits and pieces
-of state based on type, but increases ambiguities that need to be
-resolved with extra type signatures.
+This functional dependency @MonadState s m | m -> s@ means fewer
+ambiguities in code that uses this class.  But what happens if we
+remove it?  The mtl-unleashed package provides copies of MonadState
+and MonadReader with that functional dependency removed, named
+MonadStates and MonadReaders.  This allows more flexibility to extract
+bits and pieces of state based on type.
 
 These classes allow you to access bits of the State by type, without
 knowing exactly what the overall state type is, as in our example above.
 
-    typeGraphEdges :: (DsMonad m,
-                       MonadReader TypeGraph m,
-                       MonadStates Foo m,
-                       MonadStates Bar m) => ...
+    myFunction :: (MonadStates Foo m, MonadStates Bar m) => m r
 
-This will work as long as the two MonadStates instances exist for
-whatever the actual State type is:  (using the lens package here)
+This will work as long as instances of MonadStates exist for both Foo
+and Bar (using the lens package here):
 
     Data S = S {
       _foo :: Foo,
@@ -53,7 +50,7 @@ whatever the actual State type is:  (using the lens package here)
        get = use bar
        put s = bar .= s
 
-Now you can say
+Now (assuming Foo and Bar are Monoids) you can say
 
     evalState (return (get, get) :: (Foo, Bar)) (S mempty mempty)
 
@@ -64,6 +61,9 @@ this case StateT Bar:
     instance MonadStates Foo m => MonadStates Foo (StateT Baz m) where
       get = lift get
       put s = lift $ put s
+
+The implementation of a similar Readers instance shows where we must
+resolve an ambiguity that would not bother us with MonadReader:
 
     instance MonadReaders Foo m => MonadReaders Foo (ReaderT Bar m) where
       ask = lift ask
