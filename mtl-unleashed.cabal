@@ -7,8 +7,8 @@ category:           Control
 author:             David Fox
 copyright:          (c) 2015 David Fox
 maintainer:         David Fox <dsf@seereason.com>
-homepage:           https://github.com/seereason/mtl-without-fds
-bug-reports:        https://github.com/seereason/mtl-without-fds/issues
+homepage:           https://github.com/seereason/mtl-unleashed
+bug-reports:        https://github.com/seereason/mtl-unleashed/issues
 stability:          experimental
 synopsis:           MTL classes without the functional dependency
 description:
@@ -17,45 +17,6 @@ description:
   more flexibility to extract bits and pieces of state based on
   type, but increases ambiguities that need to be resolved with
   extra type signatures.
-  .
-  These classes allow you to access bits of the State by type,
-  without knowing exactly what the overall state type is.  For
-  example:
-  .
-  > typeGraphEdges :: (DsMonad m,
-  >                    MonadReader TypeGraph m,
-  >                    HasState Foo m,
-  >                    HasState Bar m) => ...
-  .
-  This will work as long as the two HasState instances exist for
-  whatever the actual State type is:
-  .
-  > Data S = S {
-  >  _foo :: Foo,
-  >  _bar :: Bar
-  > }
-  >
-  > $(makeLenses ''S)
-  >
-  > instance Monad m => HasState Foo (StateT S m) where
-  >    getState = use foo
-  >    modifyState f = foo %= f
-  >
-  > instance Monad m => HasState Bar (StateT S m) where
-  >    getState = use bar
-  >    modifyState f = bar %= f
-  .
-  Now you can say
-  .
-  > evalState (return (getState, getState) :: (Foo, Bar)) (S foo0, bar0)
-  .
-  You can even write instances to reach down into nested StateT's as
-  long as you know the exact type you are reaching down through, in
-  this case StateT Bar:
-  .
-  > Instance HasState Foo m => HasState Foo (StateT Baz m) where
-  >   getState = lift getState
-  >   modifyState f = lift $ modifyState f
 
 library
   build-depends: base < 5, mtl
