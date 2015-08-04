@@ -13,6 +13,7 @@ import Control.Monad.Reader
 import Control.Monad.State hiding (MonadState(get, put, state), modify, modify', gets)
 import qualified Control.Monad.State as MTL (get, put)
 import Control.Monad.Writer (WriterT)
+import Data.Monoid (Monoid)
 
 -- | Copy of 'Control.Monad.State.MonadState' with functional dependency m -> s removed.
 class Monad m => MonadStates s m where
