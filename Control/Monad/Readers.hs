@@ -6,13 +6,16 @@ module Control.Monad.Readers
     ( module Control.Monad.Reader
     , MonadReaders(ask, local)
     , asks
+    , view, views, iview, iviews
     ) where
 
+import Control.Lens as Lens hiding (view, iview, views, uses, iviews)
 import Control.Monad.Reader hiding (MonadReader(ask, local, reader), asks)
 import qualified Control.Monad.Reader as MTL (ask, local)
-import Control.Monad.State (StateT, mapStateT)
+import Control.Monad.State (mapStateT, StateT)
 import Control.Monad.Writer (WriterT, mapWriterT)
-import Data.Monoid (Monoid)
+
+import Data.Profunctor.Unsafe
 
 -- | Version of MonadReader modified to remove the functional dependency.
 class Monad m => MonadReaders r m where
@@ -54,3 +57,15 @@ asks :: MonadReaders r m
     => (r -> a) -- ^ The selector function to apply to the environment.
     -> m a
 asks = reader
+
+view :: MonadReaders s m => Getting a s a -> m a
+view l = Control.Monad.Readers.asks (getConst #. l Const)
+
+views :: (Profunctor p, MonadReaders s m) => Optical p (->) (Const r) s s a a -> p a r -> m r
+views l f = Control.Monad.Readers.asks (getConst #. l (Const #. f))
+
+iview :: MonadReaders s m => IndexedGetting i (i,a) s a -> m (i,a)
+iview l = Control.Monad.Readers.asks (getConst #. l (Indexed $ \i -> Const #. (,) i))
+
+iviews :: MonadReaders s m => IndexedGetting i r s a -> (i -> a -> r) -> m r
+iviews l = views l .# Indexed

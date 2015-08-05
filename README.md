@@ -54,6 +54,11 @@ Now (assuming Foo and Bar are Monoids) you can say
 
     evalState (return (get, get) :: (Foo, Bar)) (S mempty mempty)
 
+For what we have so far you can use the template haskell utilities included
+with lens, specifically makeClassy:
+
+    $(makeClassy ''S)
+
 You can even write instances to reach down into nested StateT's as
 long as you know the exact type you are reaching down through, in
 this case StateT Bar:
