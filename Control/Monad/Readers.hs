@@ -1,21 +1,29 @@
 -- | MonadState without the function dependency @m -> s@.
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Control.Monad.Readers
     ( module Control.Monad.Reader
+    , magnify'
     , MonadReaders(ask, local)
     , asks
     , view, views, iview, iviews
+    , preview, previews, ipreview, ipreviews
+    , review, reviews
+    , Magnify(magnify)
     ) where
 
-import Control.Lens as Lens hiding (view, iview, views, uses, iviews)
+import Control.Lens as Lens hiding (view, iview, views, uses, iviews, preview, previews, ipreview, ipreviews, review, reviews, Magnify)
+import Control.Lens.Internal.Zoom (Magnified)
 import Control.Monad.Reader hiding (MonadReader(ask, local, reader), asks)
 import qualified Control.Monad.Reader as MTL (ask, local)
 import Control.Monad.State (mapStateT, StateT)
 import Control.Monad.Writer (WriterT, mapWriterT)
-
+import Data.Monoid
 import Data.Profunctor.Unsafe
+import Data.Tagged
 
 -- | Version of MonadReader modified to remove the functional dependency.
 class Monad m => MonadReaders r m where
@@ -69,3 +77,40 @@ iview l = Control.Monad.Readers.asks (getConst #. l (Indexed $ \i -> Const #. (,
 
 iviews :: MonadReaders s m => IndexedGetting i r s a -> (i -> a -> r) -> m r
 iviews l = views l .# Indexed
+
+review :: MonadReaders b m => AReview t b -> m t
+review p = asks (runIdentity #. unTagged #. p .# Tagged .# Identity)
+
+reviews :: MonadReaders b m => AReview t b -> (t -> r) -> m r
+reviews p tr = asks (tr . runIdentity #. unTagged #. p .# Tagged .# Identity)
+
+instance MonadReaders s (ReifiedGetter s) where
+  ask = Getter id
+  {-# INLINE ask #-}
+  local f m = Getter (to f . runGetter m)
+  {-# INLINE local #-}
+
+instance MonadReaders s (ReifiedFold s) where
+  ask = Fold id
+  {-# INLINE ask #-}
+  local f m = Fold (to f . runFold m)
+  {-# INLINE local #-}
+
+preview :: MonadReaders s m => Getting (First a) s a -> m (Maybe a)
+preview l = asks (getFirst #. foldMapOf l (First #. Just))
+
+ipreview :: MonadReaders s m => IndexedGetting i (First (i, a)) s a -> m (Maybe (i, a))
+ipreview l = asks (getFirst #. ifoldMapOf l (\i a -> First (Just (i, a))))
+
+previews :: MonadReaders s m => Getting (First r) s a -> (a -> r) -> m (Maybe r)
+previews l f = asks (getFirst . foldMapOf l (First #. Just . f))
+
+ipreviews :: MonadReaders s m => IndexedGetting i (First r) s a -> (i -> a -> r) -> m (Maybe r)
+ipreviews l f = asks (getFirst . ifoldMapOf l (\i -> First #. Just . f i))
+
+class (Magnified m ~ Magnified n, MonadReaders b m, MonadReaders a n) => Magnify m n b a | m -> b, n -> a, m a -> n, n b -> m where
+  magnify :: LensLike' (Magnified m c) a b -> m c -> n c
+
+-- | I don't know why Control.Lens.magnify isn't working for me.
+magnify' :: forall r s m b. MonadReaders s m => Getting r s r -> ReaderT r m b -> m b
+magnify' lns action = view lns >>= runReaderT action

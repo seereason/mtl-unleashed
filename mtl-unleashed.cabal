@@ -19,7 +19,7 @@ description:
   extra type signatures.
 
 library
-  build-depends: base < 5, lens, mtl, contravariant, profunctors
+  build-depends: base < 5, lens, mtl, contravariant, profunctors, tagged
   ghc-options: -Wall -O2
   exposed-modules:
     Control.Monad.Readers
