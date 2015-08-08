@@ -52,7 +52,7 @@ instance MonadReaders S m => MonadReaders S (ReaderT T m) where
 
 -- This is where the advantages of MonadReaders start to appear:
 -- use two different MonadReaders instances for the same monad.
-s1t1 :: (MonadReaders S m, MonadReaders T m) => m (Float, Int)
+s1t1 :: (Applicative m, Functor m, MonadReaders S m, MonadReaders T m) => m (Float, Int)
 s1t1 = (,) <$> Readers.view s1 <*> Readers.view t1
 
 tests :: SpecM () ()
