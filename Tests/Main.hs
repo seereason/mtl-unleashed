@@ -6,6 +6,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
+import Control.Applicative
 import Control.Lens as Lens
 import Control.Monad.Readers as Readers
 import Control.Monad.States as States
