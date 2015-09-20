@@ -10,14 +10,13 @@ module Control.Monad.States
     , Control.Monad.States.use, Control.Monad.States.iuse, Control.Monad.States.uses, Control.Monad.States.iuses
     ) where
 
-import qualified Control.Lens as Lens (Optical, view, views)
+import qualified Control.Lens as Lens (view, views)
 import Control.Lens hiding (view, views, iview, iviews, uses)
 import Control.Monad.Readers
 import Control.Monad.State hiding (MonadState(get, put, state), modify, modify', gets)
 import qualified Control.Monad.State as MTL (get, put)
 import Control.Monad.Writer (WriterT)
-import Data.Monoid
-import Data.Profunctor.Unsafe ((#.), (.#))
+import Data.Profunctor.Unsafe ((#.))
 
 -- | Copy of 'Control.Monad.State.MonadState' with functional dependency m -> s removed.
 class Monad m => MonadStates s m where
@@ -64,8 +63,8 @@ use l = Control.Monad.States.gets (Lens.view l)
 iuse :: MonadStates s m => IndexedGetting i (i,a) s a -> m (i,a)
 iuse l = Control.Monad.States.gets (getConst #. l (Indexed $ \i -> Const #. (,) i))
 
-uses :: (Profunctor p, MonadStates s m) => Lens.Optical p (->) (Const r) s s a a -> p a r -> m r
+uses :: MonadStates s m => LensLike' (Const r) s a -> (a -> r) -> m r
 uses l f = Control.Monad.States.gets (Lens.views l f)
 
 iuses :: MonadStates s m => IndexedGetting i r s a -> (i -> a -> r) -> m r
-iuses l = uses l .# Indexed
+iuses l f = Control.Monad.States.gets (getConst #. l (Const #. Indexed f))
