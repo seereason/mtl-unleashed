@@ -16,6 +16,7 @@ import Control.Monad.Readers
 import Control.Monad.State hiding (MonadState(get, put, state), modify, modify', gets)
 import qualified Control.Monad.State as MTL (get, put)
 import Control.Monad.Writer (WriterT)
+import Data.Monoid (Monoid)
 import Data.Profunctor.Unsafe ((#.))
 
 -- | Copy of 'Control.Monad.State.MonadState' with functional dependency m -> s removed.
