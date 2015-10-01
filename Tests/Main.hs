@@ -8,7 +8,9 @@ module Main where
 
 import Control.Applicative
 import Control.Lens as Lens
+import Control.Monad.Reader (ReaderT, runReader, runReaderT)
 import Control.Monad.Readers as Readers
+import Control.Monad.State (evalState)
 import Control.Monad.States as States
 import qualified Control.Monad.Reader as MTL
 import qualified Control.Monad.State as MTL
@@ -39,21 +41,22 @@ runBoth action = runReader (runReaderT action (T 5 'x')) (S 2.5 True)
 runR action = runReader action (R (S 2.5 True) (T 5 'x'))
 
 instance Monad m => MonadReaders S (ReaderT R m) where
-    ask = {-Readers.magnify-} Readers.magnify' s ask
-    local f action = ask >>= \(r :: R) -> runReaderT (lift action) (set s (f (Lens.view s r)) r)
+    ask = Lens.magnify s ask
+    local f action = ask >>= \(r :: R) -> runReaderT (MTL.lift action) (set s (f (Lens.view s r)) r)
 
 instance Monad m => MonadReaders T (ReaderT R m) where
-    ask = {-Readers.magnify-} Readers.magnify' t ask
-    local f action = ask >>= \(r :: R) -> runReaderT (lift action) (set t (f (Lens.view t r)) r)
+    ask = Lens.magnify t ask
+    local f action = ask >>= \(r :: R) -> runReaderT (MTL.lift action) (set t (f (Lens.view t r)) r)
 
-instance MonadReaders S m => MonadReaders S (ReaderT T m) where
-    ask = lift ask
-    local f action = MTL.ask >>= MTL.runReaderT (local f (lift action))
+instance (MonadReaders S m, Monad m) => MonadReaders S (ReaderT T m) where
+    ask = MTL.lift ask
+    local f action = MTL.ask >>= MTL.runReaderT (local f (MTL.lift action))
 
 -- This is where the advantages of MonadReaders start to appear:
 -- use two different MonadReaders instances for the same monad.
-s1t1 :: (Applicative m, Functor m, MonadReaders S m, MonadReaders T m) => m (Float, Int)
-s1t1 = (,) <$> Readers.view s1 <*> Readers.view t1
+s1t1 :: forall m. (Applicative m, Functor m, MonadReaders S m, MonadReaders T m) => m (Float, Int)
+-- s1t1 = (,) <$> Readers.view s1 <*> Readers.view t1
+s1t1 = (,) <$> (view s1 <$> (ask :: m S)) <*> (view t1 <$> (ask :: m T))
 
 tests :: SpecM () ()
 tests = do
@@ -77,13 +80,13 @@ tests = do
 #endif
 
   it "sees T using MonadReaders class and modified lens" $ do
-     runReader (Readers.view t1) (T 3 'x') `shouldBe` 3
+     runReader (view t1) (T 3 'x') `shouldBe` 3
 
   it "Can use state using Lens" $ do
      evalState (Lens.use t1) (T 5 'r') `shouldBe` 5
 
   it "Can use state using States" $ do
-     evalState (States.use t1) (T 3 'x') `shouldBe` 3
+     evalState (use t1) (T 3 'x') `shouldBe` 3
 #if 0
   -- These two won't compile due to functional dependency
   it "sees T using MonadReader class and lens" $ do
@@ -94,10 +97,10 @@ tests = do
 #endif
 
   it "sees T using MonadReaders class and lens" $ do
-     runBoth (Readers.view t1) `shouldBe` 5
+     runBoth (view' t1) `shouldBe` 5
 
   it "sees S using MonadReaders class and lens" $ do
-     runBoth (Readers.view s1) `shouldBe` 2.5
+     runBoth (view' s1) `shouldBe` 2.5
 
   it "Can read two different types out of the same monad" $ do
      runR s1t1 `shouldBe` (2.5, 5)
