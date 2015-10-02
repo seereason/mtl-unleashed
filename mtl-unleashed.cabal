@@ -1,5 +1,5 @@
 name:               mtl-unleashed
-version:            0.4
+version:            0.5
 cabal-version:      >= 1.10
 build-type:         Simple
 license:            BSD3
@@ -19,7 +19,7 @@ description:
   extra type signatures.
 
 library
-  build-depends: base < 5, lens >= 4.13, mtl, contravariant, profunctors, tagged
+  build-depends: base < 5, lens >= 4.13, mtl, contravariant, profunctors, tagged, transformers
   ghc-options: -Wall -O2
   exposed-modules:
     Control.Monad.Readers
