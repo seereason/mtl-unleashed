@@ -33,7 +33,18 @@ knowing exactly what the overall state type is, as in our example above.
     myFunction :: (MonadStates Foo m, MonadStates Bar m) => m r
 
 This will work as long as instances of MonadStates exist for both Foo
-and Bar (using the lens package here):
+and Bar.  The same instances are provided for MonadReaders and
+MonadStates as come with MonadReader and MonadState:
+
+    instance Monad m => MonadReaders r (ReaderT r m)
+    instance MonadReaders r ((->) r)
+    instance MonadReaders r m => MonadReaders r (StateT s m)
+    instance (Monoid w, MonadReaders r m) => MonadReaders r (WriterT w m)
+    instance MonadReaders r m => MonadReaders r (MaybeT m)
+    ...
+
+Additional instances must be added to access parts of a value
+(e.g. the individual fields of S, an example using lens operators):
 
     Data S = S {
       _foo :: Foo,
@@ -43,33 +54,41 @@ and Bar (using the lens package here):
     $(makeLenses ''S)
 
     instance Monad m => MonadStates Foo (StateT S m) where
-       get = use foo
-       put s = foo .= s
+       getPoly = use foo
+       putPoly s = foo .= s
+
+    instance Monad m => MonadReaders Foo (ReaderT S m) where
+       askPoly = view foo
+       localPoly f action = withReaderT (over foo f) action
 
     instance Monad m => MonadStates Bar (StateT S m) where
-       get = use bar
-       put s = bar .= s
+       getPoly = use bar
+       putPoly s = bar .= s
+
+    instance Monad m => MonadReaders Bar (ReaderT S m) where
+       askPoly = view bar
+       localPoly f action = withReaderT (over bar f) action
 
 Now (assuming Foo and Bar are Monoids) you can say
 
-    evalState (return (get, get) :: (Foo, Bar)) (S mempty mempty)
+    evalState (return (getPoly, getPoly) :: (Foo, Bar)) (S mempty mempty)
 
 For what we have so far you can use the template haskell utilities included
 with lens, specifically makeClassy:
 
     $(makeClassy ''S)
 
-You can even write instances to reach down into nested StateT's as
-long as you know the exact type you are reaching down through, in
-this case StateT Bar:
+It is also necessary to provide instances when there are nested
+StateT's or ReaderT's, so Haskell knows which one to look in for a
+particular type:
 
     instance MonadStates Foo m => MonadStates Foo (StateT Baz m) where
-      get = lift get
-      put s = lift $ put s
+      getPoly = lift getPoly
+      putPoly = lift . putPoly
 
 The implementation of a similar Readers instance shows where we must
 resolve an ambiguity that would not bother us with MonadReader:
 
     instance MonadReaders Foo m => MonadReaders Foo (ReaderT Bar m) where
-      ask = lift ask
-      local f action = ask >>= \(r :: Bar) -> runReaderT (local f (lift action)) r
+      askPoly = lift askPoly
+      localPoly f action = (askPoly :: m Foo) >>= runReaderT (localPoly f (lift action))

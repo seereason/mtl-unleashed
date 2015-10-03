@@ -8,7 +8,7 @@ module Main where
 
 import Control.Applicative
 import Control.Lens as Lens
-import Control.Monad.Reader (ReaderT, runReader, runReaderT)
+import Control.Monad.Reader as Reader (ask, local, ReaderT, runReader, runReaderT, withReaderT)
 import Control.Monad.Readers as Readers
 import Control.Monad.State (evalState, lift)
 import Control.Monad.States as States
@@ -41,13 +41,13 @@ runR action = runReader action (R (S 2.5 True) (T 5 'x'))
 -- Custom instances to direct us through stacked/nested reader monads -
 -- how to get an S from an R
 instance Monad m => MonadReaders S (ReaderT R m) where
-    askPoly = Lens.magnify s askPoly
-    localPoly f action = askPoly >>= \(r :: R) -> runReaderT (lift action) (set s (f (Lens.view s r)) r)
+    askPoly = Lens.view s
+    localPoly f action = withReaderT (Lens.over s f) action
 
 -- how to get a T from an R
 instance Monad m => MonadReaders T (ReaderT R m) where
-    askPoly = Lens.magnify t askPoly
-    localPoly f action = askPoly >>= \(r :: R) -> runReaderT (lift action) (set t (f (Lens.view t r)) r)
+    askPoly = Lens.view t
+    localPoly f action = withReaderT (Lens.over t f) action
 
 -- how to get an S from a T (it doesn't have one, we have
 -- to get it from m.)
