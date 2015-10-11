@@ -6,7 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Control.Monad.Readers
     ( module Control.Monad.Trans.Reader
-    , MonadReaders(askPoly, localPoly)
+    , MonadReaders(askPoly, localPoly, readerPoly)
     , viewPoly
     ) where
 

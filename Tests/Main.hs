@@ -7,11 +7,11 @@
 module Main where
 
 import Control.Applicative
-import Control.Lens as Lens
+import qualified Control.Lens as Lens
+import Control.Lens.Readers as Readers
+import Control.Lens.States as States
 import Control.Monad.Reader as Reader (ask, local, ReaderT, runReader, runReaderT, withReaderT)
-import Control.Monad.Readers as Readers
 import Control.Monad.State (evalState, lift)
-import Control.Monad.States as States
 import Test.Hspec hiding (runIO)
 import Test.Hspec.Core.Spec (SpecM)
 
@@ -30,9 +30,9 @@ data R = R {
     , _t :: T
     }
 
-$(makeLenses ''S)
-$(makeLenses ''T)
-$(makeLenses ''R)
+$(Lens.makeLenses ''S)
+$(Lens.makeLenses ''T)
+$(Lens.makeLenses ''R)
 
 runBoth action = runReader (runReaderT action (T 5 'x')) (S 2.5 True)
 
