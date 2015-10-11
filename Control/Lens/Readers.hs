@@ -16,6 +16,7 @@ module Control.Lens.Readers
 import Control.Lens hiding (views, iview, iviews, review, view, reviews, preview, ipreview, previews)
 import Control.Monad.Readers
 import Control.Monad.Writer (First(First, getFirst))
+import Data.Monoid -- for base < 4.8
 import Data.Profunctor.Unsafe ((#.), (.#))
 import Data.Tagged (Tagged(Tagged, unTagged))
 

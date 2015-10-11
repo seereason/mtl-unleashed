@@ -15,7 +15,7 @@ module Control.Lens.States
 
 import Control.Applicative -- for base < 4.8
 import Control.Lens hiding (use, (.=), (%=), (?=), (<~), (<.=), (<?=), (<>~))
-import Control.Monad.States hiding (get, put)
+import Control.Monad.States
 import Data.Monoid -- for base < 4.8
 
 use :: MonadStates s m => Getting a s a -> m a
