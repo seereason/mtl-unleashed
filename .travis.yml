@@ -1,22 +1,23 @@
-# NB: don't set `language: haskell` here
+language: c
 
-# There are bugs in 7.8 that affect the th-context package, so I'm
-# dropping support here and elsewhere.  Also, the #ifs required to
-# get the right symbols from Control.Applicative are annoying.
-env:
- - CABALVER=1.18 GHCVER=7.8.4
- - CABALVER=1.22 GHCVER=7.10.2
- - CABALVER=head GHCVER=head
+# explicitly request container-based infrastructure
+sudo: false
 
 matrix:
-  allow_failures:
+  include:
+    - env: CABALVER=1.16 GHCVER=7.6.3
+      addons: {apt: {packages: [cabal-install-1.16,ghc-7.6.3], sources: [hvr-ghc]}}
+    - env: CABALVER=1.18 GHCVER=7.8.4
+      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4], sources: [hvr-ghc]}}
+    - env: CABALVER=1.22 GHCVER=7.10.1
+      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.1],sources: [hvr-ghc]}}
     - env: CABALVER=head GHCVER=head
+      addons: {apt: {packages: [cabal-install-head,ghc-head],  sources: [hvr-ghc]}}
 
-# Note: the distinction between `before_install` and `install` is not important.
+  allow_failures:
+   - env: CABALVER=head GHCVER=head
+
 before_install:
- - travis_retry sudo add-apt-repository -y ppa:hvr/ghc
- - travis_retry sudo apt-get update
- - travis_retry sudo apt-get install cabal-install-$CABALVER ghc-$GHCVER
  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
 
 install:
