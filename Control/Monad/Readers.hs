@@ -33,7 +33,7 @@ import Control.Monad.Trans.Writer.Strict as Strict
 
 import Control.Monad.Trans.Class (lift)
 -- import Control.Monad
--- import Data.Monoid
+import Data.Monoid
 
 class Monad m => MonadReaders r m where
   askPoly :: m r
