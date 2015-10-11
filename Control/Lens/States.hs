@@ -13,8 +13,10 @@ module Control.Lens.States
     , (<>~)
     ) where
 
+import Control.Applicative -- for base < 4.8
 import Control.Lens hiding (use, (.=), (%=), (?=), (<~), (<.=), (<?=), (<>~))
 import Control.Monad.States hiding (get, put)
+import Data.Monoid -- for base < 4.8
 
 use :: MonadStates s m => Getting a s a -> m a
 use = usePoly
