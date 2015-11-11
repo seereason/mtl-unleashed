@@ -94,4 +94,4 @@ must resolve an ambiguity that would not bother us with MonadReader:
 
     instance MonadReaders Foo m => MonadReaders Foo (ReaderT Bar m) where
       askPoly = lift askPoly
-      localPoly f action = (askPoly :: m Foo) >>= runReaderT (localPoly f (lift action))
+      localPoly f action = askPoly >>= \(foo :: Foo) -> runReaderT (localPoly f (lift action)) foo
