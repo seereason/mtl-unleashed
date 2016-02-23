@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- | Versions of the lens operators for MonadStates instead of MonadState.
 module Control.Lens.States
     ( module Control.Monad.States
@@ -6,10 +7,14 @@ module Control.Lens.States
     , put
     , (.=)
     , (%=)
+#ifdef MIN_VERSION_lens
     , (?=)
+#endif
     , (<~)
     , (<.=)
+#ifdef MIN_VERSION_lens
     , (<?=)
+#endif
     , (<>~)
     ) where
 
@@ -35,9 +40,12 @@ l .= b = modifyPoly (l .~ b)
 l %= f = modifyPoly (l %~ f)
 {-# INLINE (%=) #-}
 
+#ifdef MIN_VERSION_lens
+?~ is not available in microlens
 (?=) :: MonadStates s m => ASetter s s a (Maybe b) -> b -> m ()
 l ?= b = modifyPoly (l ?~ b)
 {-# INLINE (?=) #-}
+#endif
 
 (<~) :: MonadStates s m => ASetter s s a b -> m b -> m ()
 l <~ mb = mb >>= (l .=)
@@ -49,11 +57,13 @@ l <.= b = do
   return b
 {-# INLINE (<.=) #-}
 
+#ifdef MIN_VERSION_lens
 (<?=) :: MonadStates s m => ASetter s s a (Maybe b) -> b -> m b
 l <?= b = do
   l ?= b
   return b
 {-# INLINE (<?=) #-}
+#endif
 
 (<>~) :: Monoid a => ASetter s t a a -> a -> s -> t
 l <>~ n = over l (`mappend` n)

@@ -1,16 +1,21 @@
+{-# LANGUAGE CPP #-}
 -- | Versions of the lens operators for MonadStates instead of MonadState.
 module Control.Lens.Readers
     ( module Control.Monad.Readers
     , asks
+#ifdef MIN_VERSION_lens
     , views
     , iview
     , iviews
     , review
+#endif
     , view
+#ifdef MIN_VERSION_lens
     , reviews
     , preview
     , ipreview
     , previews
+#endif
     ) where
 
 import Control.Lens hiding (views, iview, iviews, review, view, reviews, preview, ipreview, previews)
@@ -23,6 +28,7 @@ import Data.Tagged (Tagged(Tagged, unTagged))
 asks :: MonadReaders r m => (r -> a) -> m a
 asks = readerPoly
 
+#ifdef MIN_VERSION_lens
 views :: MonadReaders s m => LensLike' (Const r) s a -> (a -> r) -> m r
 views l f = asks (getConst #. l (Const #. f))
 {-# INLINE views #-}
@@ -38,11 +44,13 @@ iviews l f = asks (getConst #. l (Const #. Indexed f))
 review :: MonadReaders b m => AReview t b -> m t
 review p = asks (runIdentity #. unTagged #. p .# Tagged .# Identity)
 {-# INLINE review #-}
+#endif
 
 view :: MonadReaders r m => Getting a r a -> m a
 view = viewPoly
 {-# INLINE view #-}
 
+#ifdef MIN_VERSION_lens
 reviews :: MonadReaders b m => AReview t b -> (t -> r) -> m r
 reviews p tr = asks (tr . runIdentity #. unTagged #. p .# Tagged .# Identity)
 {-# INLINE reviews #-}
@@ -58,3 +66,4 @@ ipreview l = asks (getFirst #. ifoldMapOf l (\i a -> First (Just (i, a))))
 previews :: MonadReaders s m => Getting (First r) s a -> (a -> r) -> m (Maybe r)
 previews l f = asks (getFirst . foldMapOf l (First #. Just . f))
 {-# INLINE previews #-}
+#endif
