@@ -41,7 +41,6 @@ l %= f = modifyPoly (l %~ f)
 {-# INLINE (%=) #-}
 
 #ifdef MIN_VERSION_lens
-?~ is not available in microlens
 (?=) :: MonadStates s m => ASetter s s a (Maybe b) -> b -> m ()
 l ?= b = modifyPoly (l ?~ b)
 {-# INLINE (?=) #-}
