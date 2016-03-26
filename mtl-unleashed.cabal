@@ -19,7 +19,7 @@ description:
   extra type signatures.
 
 library
-  build-depends: base < 5, mtl, contravariant, profunctors, tagged, transformers, transformers-compat
+  build-depends: base < 5, lens >= 4.13, mtl, contravariant, profunctors, tagged, transformers, transformers-compat
   ghc-options: -Wall -O2
   exposed-modules:
     Control.Monad.Readers
@@ -27,21 +27,13 @@ library
     Control.Lens.Readers
     Control.Lens.States
   default-language: Haskell2010
-  if impl(ghcjs)
-    build-depends:     microlens-compat
-  else
-    build-depends:     lens >= 4.13
 
 test-suite mtl-unleashed-tests
   type:             exitcode-stdio-1.0
   hs-source-dirs:   Tests
   main-is:          Main.hs
-  build-depends:    base, hspec, hspec-core, mtl, mtl-unleashed, contravariant, profunctors
+  build-depends:    base, hspec, hspec-core, lens, mtl, mtl-unleashed, contravariant, profunctors
   default-language: Haskell2010
-  if impl(ghcjs)
-    build-depends:     microlens-compat
-  else
-    build-depends:     lens >= 4.13
 
 source-repository head
   type:     git
